@@ -152,17 +152,14 @@ function createFileWriterTool(): DynamicStructuredTool {
         
         // Use only the basename to prevent path traversal
         const safeFilename = path.basename(filename);
-        if (!safeFilename) {
-          return 'Error: Invalid filename';
-        }
         
         // Ensure we write to temp directory for safety
         const filepath = path.join(tmpDir, safeFilename);
         
-        // Verify the resolved path is still under temp directory
+        // Verify the resolved path is still under temp directory to prevent directory traversal
         const resolvedPath = path.resolve(filepath);
         if (!resolvedPath.startsWith(tmpDir)) {
-          return 'Error: Invalid file path';
+          return 'Error: Invalid file path - attempted directory traversal';
         }
         
         fs.writeFileSync(filepath, content);

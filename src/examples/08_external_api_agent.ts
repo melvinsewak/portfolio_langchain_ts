@@ -104,8 +104,11 @@ function createHttpGetTool(): DynamicStructuredTool {
     func: async ({ url }) => {
       try {
         // SECURITY: Domain whitelist to prevent SSRF and unauthorized access
-        // Modify this list according to your specific security policies and requirements
-        // Only these domains are allowed to be accessed by the agent
+        // WARNING: Only add trusted domains to this list. Adding untrusted domains
+        // could allow Server-Side Request Forgery (SSRF) attacks where the agent
+        // could be tricked into making requests to internal services or malicious sites.
+        // Modify this list according to your specific security policies and requirements.
+        // Only these domains are allowed to be accessed by the agent.
         const allowedDomains = ['api.github.com', 'jsonplaceholder.typicode.com', 'httpbin.org'];
         
         const parsedUrl = new URL(url);
