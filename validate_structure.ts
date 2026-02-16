@@ -142,7 +142,9 @@ function checkExampleStructure(filepath: string): boolean {
       'Has JSDoc comment': content.substring(0, 500).includes('/**'),
       'Imports utils': content.includes('from \'../utils\'') || content.includes('from "../utils"'),
       'Has main block': content.includes('require.main === module'),
-      'Has mode argument handling': content.includes('--mode'),
+      'Has mode argument handling': /process\.argv[^\n]*--mode/.test(content) || 
+                                    /args\.indexOf\(['"`]--mode/.test(content) ||
+                                    /\.includes\(['"`]--mode/.test(content),
       'Has interactive mode': content.toLowerCase().includes('interactive'),
     };
     

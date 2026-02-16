@@ -68,26 +68,59 @@ function createWeatherTool(): DynamicStructuredTool {
 }
 
 /**
- * Simple HTTP GET request helper.
+ * Simple HTTP GET request helper with redirect validation.
  */
-function httpGet(url: string): Promise<string> {
+function httpGet(url: string, allowedDomains: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === 'https:' ? https : http;
     
-    client.get(url, (res) => {
-      let data = '';
+    // Disable automatic redirects to validate each redirect target
+    const options = {
+      ...parsedUrl,
+      method: 'GET',
+      // Follow redirects manually to validate each hop
+    };
+    
+    const makeRequest = (currentUrl: string, redirectCount = 0) => {
+      if (redirectCount > 5) {
+        reject(new Error('Too many redirects'));
+        return;
+      }
       
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
+      const currentParsedUrl = new URL(currentUrl);
       
-      res.on('end', () => {
-        resolve(data);
+      // Validate domain for each request (including redirects)
+      if (!allowedDomains.includes(currentParsedUrl.hostname)) {
+        reject(new Error(`Domain ${currentParsedUrl.hostname} not in allowlist. This prevents redirect-based SSRF attacks.`));
+        return;
+      }
+      
+      const currentClient = currentParsedUrl.protocol === 'https:' ? https : http;
+      
+      currentClient.get(currentUrl, (res) => {
+        // Check for redirects
+        if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          const redirectUrl = new URL(res.headers.location, currentUrl).toString();
+          makeRequest(redirectUrl, redirectCount + 1);
+          return;
+        }
+        
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          resolve(data);
+        });
+      }).on('error', (err) => {
+        reject(err);
       });
-    }).on('error', (err) => {
-      reject(err);
-    });
+    };
+    
+    makeRequest(url);
   });
 }
 
@@ -122,7 +155,7 @@ function createHttpGetTool(): DynamicStructuredTool {
           });
         }
         
-        const response = await httpGet(url);
+        const response = await httpGet(url, allowedDomains);
         
         // Try to parse as JSON
         try {

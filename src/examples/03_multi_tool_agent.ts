@@ -37,13 +37,52 @@ function createCalculatorTool(): DynamicStructuredTool {
     }),
     func: async ({ expression }) => {
       try {
-        // Safe evaluation using Function constructor with limited scope
-        const sanitized = expression.replace(/[^0-9+\-*/(). ]/g, '');
-        if (sanitized !== expression) {
+        // Safe evaluation: Parse and evaluate expression using a simple recursive evaluator
+        // This avoids the security risks of Function constructor or eval
+        const tokens = expression.match(/(\d+\.?\d*|[+\-*\/()])/g);
+        if (!tokens || tokens.join('') !== expression.replace(/\s/g, '')) {
           return 'Error: Invalid characters in expression. Only numbers and basic operators (+, -, *, /, (, )) are allowed.';
         }
         
-        const result = Function(`"use strict"; return (${sanitized})`)();
+        // Simple expression evaluator with operator precedence
+        let pos = 0;
+        const peek = () => tokens[pos];
+        const consume = () => tokens[pos++];
+        
+        const parseNumber = (): number => {
+          const token = consume();
+          if (token === '(') {
+            const result = parseExpression();
+            consume(); // consume ')'
+            return result;
+          }
+          if (token === '-') {
+            return -parseNumber();
+          }
+          return parseFloat(token);
+        };
+        
+        const parseTerm = (): number => {
+          let result = parseNumber();
+          while (peek() === '*' || peek() === '/') {
+            const op = consume();
+            const right = parseNumber();
+            result = op === '*' ? result * right : result / right;
+          }
+          return result;
+        };
+        
+        const parseExpression = (): number => {
+          let result = parseTerm();
+          while (peek() === '+' || peek() === '-') {
+            const op = consume();
+            const right = parseTerm();
+            result = op === '+' ? result + right : result - right;
+          }
+          return result;
+        };
+        
+        const result = parseExpression();
         return `Result: ${result}`;
       } catch (error) {
         return `Error: ${error instanceof Error ? error.message : String(error)}`;
