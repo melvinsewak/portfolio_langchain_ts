@@ -28,17 +28,17 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@langchain/community": "^0.0.20",
-    "@langchain/core": "^0.1.0",
-    "@langchain/openai": "^0.0.19",
-    "langchain": "^0.1.0",
-    "langgraph": "^0.0.20",
+    "@langchain/community": "^1.1.15",
+    "@langchain/core": "^1.1.16",
+    "@langchain/openai": "^1.2.7",
+    "@langchain/langgraph": "^1.1.4",
+    "langchain": "^1.2.24",
     "chromadb": "^1.7.3",
     "dotenv": "^16.4.1",
     "cheerio": "^1.0.0-rc.12",
     "pdf-parse": "^1.1.1",
-    "tiktoken": "^1.0.10",
-    "zod": "^3.22.4"
+    "zod": "^3.25.32",
+    "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
