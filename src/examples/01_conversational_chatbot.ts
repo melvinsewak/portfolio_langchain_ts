@@ -50,7 +50,10 @@ function createCalculatorTool(): DynamicStructuredTool {
           const token = consume();
           if (token === '(') {
             const result = parseExpression();
-            consume(); // consume ')'
+            const closeParen = consume();
+            if (closeParen !== ')') {
+              throw new Error('Mismatched parentheses');
+            }
             return result;
           }
           if (token === '-') {

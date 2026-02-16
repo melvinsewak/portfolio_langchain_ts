@@ -72,16 +72,6 @@ function createWeatherTool(): DynamicStructuredTool {
  */
 function httpGet(url: string, allowedDomains: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    const parsedUrl = new URL(url);
-    const client = parsedUrl.protocol === 'https:' ? https : http;
-    
-    // Disable automatic redirects to validate each redirect target
-    const options = {
-      ...parsedUrl,
-      method: 'GET',
-      // Follow redirects manually to validate each hop
-    };
-    
     const makeRequest = (currentUrl: string, redirectCount = 0) => {
       if (redirectCount > 5) {
         reject(new Error('Too many redirects'));
